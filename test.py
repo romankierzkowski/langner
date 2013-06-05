@@ -26,7 +26,39 @@ class SyntaxTests(unittest.TestCase):
         self.check('(x & x == x)->(new y);')
         self.check('(x << y == x)->(new y);')
         self.check('(x >> y == x)->(new y);')
+        self.check('(~x)->(new y);')
 
+    def testArithm(self):
+        self.check('(x + y)->(new y);')
+        self.check('(x - y)->(new y);')
+        self.check('(x * y)->(new y);')
+        self.check('(x / y)->(new y);')
+        self.check('(x % y)->(new y);')
+        self.check('(x // y)->(new y);')
+        self.check('(x + +y)->(new y);')
+        self.check('(x + -y)->(new y);')
+        self.check('(x ** -y ** +-z)->(new y);')
+
+    def testAtoms(self):
+        self.check('(False)->(new y);')
+        self.check('(True)->(new y);')
+        self.check('(1.0)->(new y);')
+        self.check('(1)->(new y);')
+        self.check('("ab\\n\\tc")->(new y);')
+        self.check('(x + (-y))->(new y);')
+
+    def testFunction(self):
+        self.check('(a())->(new y);')
+        self.check('(a(1.0, 1, a.x, "abc"))->(new y);')
+
+    def testEvents(self):
+        self.check('(#a())->(new y);')
+        self.check('(#a(x, y, z))->(new y);')
+
+    def testActions(self):
+        self.check('(x)->(x.a = x + y);')
+        self.check('(x)->(new y, y.a = x + y, b(x + y, x.a, x == b));')
+    
     def check(self, code):
         parsed = parser.parse(code)
         self.assertEqual(code, str(parsed))

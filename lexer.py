@@ -46,6 +46,9 @@ tokens = (
 
    'EVENT_INTRO',
 
+   'TRUE',
+   'FALSE',
+
    'NAME'
 )
 
@@ -91,6 +94,21 @@ t_SEMICOLON = r';'
 
 t_EVENT_INTRO = r'\#'
 
+def t_STRING(t):
+    r'"[^\n"]*"'
+    t.value = eval(t.value) # eval("'''%s'''" % t.value[1:-1])
+    return t
+
+def t_TRUE(t):
+    r'True'
+    t.value = True
+    return t
+
+def t_FALSE(t):
+    r'False'
+    t.value = False
+    return t
+
 def t_NEW(t):
     r'new'
     return t
@@ -104,13 +122,8 @@ def t_NUMBER(t):
     t.value = eval(t.value)
     return t
 
-def t_STRING(t):
-    r'\".*\"'
-    t.value = eval("'''%s'''" % t.value[1:-1])
-    return t
+t_ignore = ' \n\t'
 
-# A string containing ignored characters (spaces, new lines and tabs)
-t_ignore  = ' \n\t'
 
 # Error handling rule
 def t_error(t):
@@ -121,7 +134,7 @@ def t_error(t):
 lexer = lex.lex()
 
 def main():
-    data = "#abc"
+    data = '''"abc\\nabcd" '''
     lexer.input(data)
 
     print "Source: %s" % data
