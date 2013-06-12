@@ -46,8 +46,7 @@ tokens = (
 
    'EVENT_INTRO',
 
-   'TRUE',
-   'FALSE',
+   'BOOL_LITERAL',
 
    'NAME'
 )
@@ -72,8 +71,8 @@ t_BIT_AND = r'&'
 t_BIT_OR = r'\|'
 t_BIT_XOR = r'\^'
 t_BIT_INVR = r'\~'
-t_LSHIFT = r'>>'
-t_RSHIFT = r'<<'
+t_LSHIFT = r'<<'
+t_RSHIFT = r'>>'
 
 t_LT = r'<'
 t_LE = r'<='
@@ -99,14 +98,9 @@ def t_STRING(t):
     t.value = eval(t.value) # eval("'''%s'''" % t.value[1:-1])
     return t
 
-def t_TRUE(t):
-    r'True'
-    t.value = True
-    return t
-
-def t_FALSE(t):
-    r'False'
-    t.value = False
+def t_BOOL_LITERAL(t):
+    r'True|False'
+    t.value = eval(t.value)
     return t
 
 def t_NEW(t):

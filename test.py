@@ -35,9 +35,9 @@ class SyntaxTests(unittest.TestCase):
         self.check('(x / y)->(new y);')
         self.check('(x % y)->(new y);')
         self.check('(x // y)->(new y);')
-        self.check('(x + +y)->(new y);')
+        self.check_modified('(x + +y)->(new y);', '(x + y)->(new y);')
         self.check('(x + -y)->(new y);')
-        self.check('(x ** -y ** +-z)->(new y);')
+        self.check_modified('(x ** -y ** +-z)->(new y);', '(x ** -y ** -z)->(new y);')
 
     def testAtoms(self):
         self.check('(False)->(new y);')
@@ -59,9 +59,18 @@ class SyntaxTests(unittest.TestCase):
         self.check('(x)->(x.a = x + y);')
         self.check('(x)->(new y, y.a = x + y, b(x + y, x.a, x == b));')
     
+    def testAtoms(self):
+        self.check('(x.a == 2)->(x.a = x + y);')
+        self.check('(x.a == x.b)->(x.a = x + y);')
+        self.check('(x.a == "abc")->(x.a = x + y);')
+
     def check(self, code):
         parsed = parser.parse(code)
         self.assertEqual(code, str(parsed))
+
+    def check_modified(self, code, output):
+        parsed = parser.parse(code)
+        self.assertEqual(output, str(parsed))
 
 def main():
     unittest.main()
