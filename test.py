@@ -3,6 +3,9 @@ from parser import parser
 
 class SyntaxTests(unittest.TestCase):
 
+    def testEmpty(self):
+        self.check("")
+
     def testBasic(self):
         self.check('(x.a)->(new y);(x.a)->(new y);')
 
@@ -63,6 +66,10 @@ class SyntaxTests(unittest.TestCase):
         self.check('(x.a == 2)->(x.a = x + y);')
         self.check('(x.a == x.b)->(x.a = x + y);')
         self.check('(x.a == "abc")->(x.a = x + y);')
+        self.check('("abc")->(x.a = x + y);')
+        self.check('(1.23)->(x.a = x + y);')
+        self.check('(True)->(x.a = x + y);')
+        self.check('(False)->(x.a = x + y);')
 
     def check(self, code):
         parsed = parser.parse(code)
@@ -71,6 +78,42 @@ class SyntaxTests(unittest.TestCase):
     def check_modified(self, code, output):
         parsed = parser.parse(code)
         self.assertEqual(output, str(parsed))
+
+    # Evaluation:
+
+    def testEvaluate(self):
+        self.evaluate("True", True)
+        self.evaluate("!True", False)
+        self.evaluate("1 == 1", True)
+        self.evaluate("1 == 2", False)
+        self.evaluate('"a" == "b"', False)
+        self.evaluate('"a" == "a"', True)
+        self.evaluate('1 + 2 * 6 - 3', 10)
+        self.evaluate('2 + 2 == 5', False)
+        self.evaluate('2 ** 4 + 1', 17)
+        self.evaluate('"a" + "b"',"ab")
+        self.evaluate('x + y', 4, context={"x":2,"y":2})
+        self.evaluate('x.y + y', 4, context={"x":{"x":2,"y":2},"y":2})
+        # self.evaluate("True and True", False)
+        # self.evaluate("True and True", False)
+        pass 
+
+    def evaluate(self, condition, expected, **kwargs):
+        context = kwargs.get("context", None)
+        rule = "(%s)->(new x);" % condition
+        strategy = parser.parse(rule);
+        result = strategy.rules[0].conditions[0].evaluate(context)
+        self.assertEqual(result, expected)
+
+
+    def testVariables(self):
+        self.variables("x",(set([]), set(['x'])) )
+
+    def variables(self, condition, expected):
+        rule = "(%s)->(new x);" % condition
+        strategy = parser.parse(rule);
+        result = strategy.rules[0].variables()
+        self.assertEqual(result, expected)
 
 def main():
     unittest.main()

@@ -5,11 +5,9 @@ import re
 from lexer import tokens
 
 
-def p_rules(p):
-    ''' rules : rule_list '''
-    p[0] = ""
-    for r in p[1]:
-        p[0] += "%s;" % r
+def p_strategy(p):
+    ''' strategy : rule_list '''
+    p[0] = Strategy(p[1])
 
 def p_rule_list(p):
     ''' rule_list : rule SEMICOLON rule_list
@@ -29,15 +27,15 @@ def p_empty(p):
 
 def p_rule(p):
     ''' rule : LPAREN condition_list RPAREN ARROW LPAREN action_list RPAREN '''
-    p[0] = "(%s)->(%s)" % (p[2], p[6])
+    p[0] = Rule(p[2], p[6])
 
 def p_condition_list(p):
     ''' condition_list : condition SEPARATOR condition_list
                        | condition '''
     if len(p) > 2:
-        p[0] = "%s, %s" % (p[1], p[3])
+        p[0] = [p[1]] + p[3]
     else:
-        p[0] = p[1]
+        p[0] = [p[1]]
 
 
 # CONDITION
@@ -220,7 +218,7 @@ def p_atom_number(p):
 
 def p_atom_bool(p):
     ''' atom : BOOL_LITERAL '''
-    p[0] = BoolLiteral(p[1])
+    p[0] = BooleanLiteral(p[1])
 
 def p_atom_paren(p):
     ''' atom : LPAREN or_test RPAREN '''
@@ -256,13 +254,13 @@ def p_action_list(p):
     ''' action_list : action SEPARATOR action_list
                     | action '''
     if len(p) > 2:
-        p[0] = "%s, %s" % (p[1], p[3])
+        p[0] = [p[1]] + p[3]
     else:
-        p[0] = p[1]
+        p[0] = [p[1]]
 
 def p_action_assignment(p):
     ''' action : strict_selection ASSIGNMENT or_test '''
-    p[0] = "%s = %s" % (str(p[1]), p[3])
+    p[0] = Assignment(p[1], p[3])
 
 def p_action_function(p):
     ''' action : function_exec '''
@@ -270,13 +268,11 @@ def p_action_function(p):
 
 def p_action_new(p):
     ''' action : NEW variable '''
-    if len(p) == 3:
-        p[0] = "new %s" % str(p[2])
+    p[0] = New(p[2])
 
 def p_action_delete(p):
     ''' action : DELETE variable '''
-    if len(p) == 3:
-        p[0] = "delete %s" % str(p[2])
+    p[0] = Delete(p[2])
 
 def p_variable(p):
     ''' variable : NAME '''

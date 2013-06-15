@@ -7,6 +7,9 @@ class Variable:
     def __str__(self):
         return self.name
 
+    def evaluate(self, context):
+        return context[self.name]
+
 class Selection:
     def __init__(self, variable, selection_path):
         self.variable = variable
@@ -22,6 +25,16 @@ class Selection:
     def is_strict(self):
         return selection_path != None
 
+    def evaluate(self, context):
+        result = self.variable.evaluate(context)
+        if self.selection_path:
+            for name in self.selection_path:
+                result = result[name]
+        return result
+
+    def variables(self):
+        return set([self.variable.name])
+
 class Event:
     def __init__(self, name, variables):
         self.name = name
@@ -35,15 +48,55 @@ class Event:
             var_list += str(self.variables[-1])
         return "#%s(%s)" % (str(self.name), var_list)
 
-class Rule:
-    def __init__(self, condition_list, action_list):
-        self.condition_list = condition_list
-        self.action_list = action_list
+    def variable(self):
+        return set([x.name for x in self.variables])
+
+class Strategy:
+    def __init__(self, rules):
+        self.rules = rules
 
     def __str__(self):
-        return "(" + str(condition_list) + ")"
+        result = ""
+        for r in self.rules:
+            result += "%s;" % r
+        return result
 
-class Operator:
+
+class Rule:
+
+    def _comaseparate(self, input):
+        output = ""
+        for r in input[:-1]:
+            output += "%s, " % str(r)
+        output += str(input[-1])
+        return output
+
+    def __init__(self, conditions, actions):
+        self.conditions = conditions
+        self.actions = actions
+
+    def __str__(self):
+        conditions = self._comaseparate(self.conditions)
+        actions = self._comaseparate(self.actions)
+        return "(%s)->(%s)" % (conditions, actions)
+
+    def variables(self):
+        event_variables = set()
+        loose_variables = set()
+        first = True
+        for condition in self.conditions:
+            if isinstance(condition, Event):
+                if first:
+                    event.union(condition.variables())
+                    first = False
+            else:
+                loose_variables = loose_variables.union(condition.variables())
+                return (event_variables, loose_variables)
+
+class Test:
+    pass
+
+class Operator(Test):
     
     def _parenth(self, operand):
         if hasattr(operand, "priority") and operand.priority < self.priority:
@@ -57,8 +110,13 @@ class UnaryOperator(Operator):
         self.operand = operand
 
     def __str__(self):
-
         return "%s%s" % (self.operator, self._parenth(self.operand))
+
+    def evaluate(self, context):
+        return self.operation(self.operand.evaluate(context))
+
+    def variables(self):
+        return self.operand.variables()
 
 class BinnaryOperator(Operator):
     
@@ -68,6 +126,35 @@ class BinnaryOperator(Operator):
 
     def __str__(self):
         return "%s %s %s" % (self._parenth(self.loperand), self.operator, self._parenth(self.roperand))
+
+    def evaluate(self, context):
+        return self.operation(self.loperand.evaluate(context), self.roperand.evaluate(context))
+
+    def variables(self):
+        return self.roperand.variables().union(self.loperand.variables())
+
+class Assignment:
+
+    def __init__(self, selection, test):
+        self.selection = selection
+        self.test = test
+
+    def __str__(self):
+        return "%s = %s" % (str(self.selection), str(self.test))
+
+class New:
+    def __init__(self, variable):
+        self.variable = variable
+
+    def __str__(self):
+        return "new %s" % str(self.variable)
+
+class Delete:
+    def __init__(self, variable):
+        self.variable = variable
+
+    def __str__(self):
+        return "delete %s" % str(self.variable)
 
 class Or(BinnaryOperator):
     operator = "||"
@@ -182,12 +269,18 @@ class Power(BinnaryOperator):
     priority = 12
     operation = pow
 
-class Literal:
+class Literal(Test):
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
-        return repr(self.value)  
+        return repr(self.value)
+
+    def evaluate(self, context):
+        return self.value
+
+    def variables(self):
+        return set()
 
 class StringLiteral(Literal):
     def __str__(self):
@@ -201,7 +294,7 @@ class BooleanLiteral(Literal):
 class NumberLiteral(Literal):
     pass
 
-class FunctionExecution:
+class FunctionExecution(Test):
 
     def __init__(self, name, params):
         self.name = name
