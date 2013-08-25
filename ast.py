@@ -1,4 +1,115 @@
 from operator import *
+from collections import MutableMapping
+from itertools import product
+
+class Object(MutableMapping):
+
+    def __init__(self):
+        self.fields = {}
+        self.deleted = False
+
+    def __len__(self):
+        return self.fields.__len__()
+
+    def __iter__(self):
+        return self.fields.__iter__()
+    
+    def __contains__(self, key):
+        return key in self.fields
+
+    def __getitem__(self, key):
+        return self.fields.get(key, Object.UNDEF)
+
+    def __setitem__(self, key, value):
+        if value == Object.UNDEF:
+            del self.fields[key]
+        else:
+            self.fields[key] = value
+
+    def __delitem__(self, key):
+        self.fields.remove(key)
+
+    def values(self):
+        return self.fields.values()
+
+    def items(self):
+        return self.fields.items()
+
+    def __str__(self):
+        return str(self.fields)
+
+    def __getattr__(self, name):
+        try:
+            return self.fields[name]
+        except KeyError:
+            raise AttributeError
+
+class ObjectWrapper(Object):
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.deleted = False
+
+    def __len__(self):
+        return len(dir(self.wrapped))
+
+    def __iter__(self):
+        return iter(dir(self.wrapped))
+    
+    def __contains__(self, key):
+        return hasattr(self.wrapped, key)
+
+    def __getitem__(self, key):
+        try:
+            result = getattr(self.wrapped, key)
+            if result is None:
+                return Object.UNDEF
+            else:
+                return result
+        except AttributeError:
+            return Object.UNDEF
+
+    def __setitem__(self, key, value):
+        if value == Object.UNDEF:
+            value = None   
+        setattr(self.wrapped, key, value)
+
+    def __delitem__(self, key):
+        pass
+
+    def values(self):
+        return [ getattr(self.wrapped, name) for name in dir(self.wrapped) ]
+
+    def items(self):
+        return dir(self.wrapped)
+
+    def __str__(self):
+        return str(self.wrapped)
+
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
+
+
+class UndefException(Exception):
+
+    def __str__(self):
+        return "Cannot modify undefined!"
+
+class Undef(Object):
+
+    def __setitem__(self, key, value):
+        raise UndefException()
+
+    def __delitem__(self, key):
+        raise UndefException()
+
+    def dfs(self, callback):
+        callback(self)
+
+# Singleton for undefined:
+Object.UNDEF = Undef()
+
+#o = Object()
 
 class Variable:
     def __init__(self, name):
@@ -7,8 +118,12 @@ class Variable:
     def __str__(self):
         return self.name
 
-    def evaluate(self, context):
+    def evaluate(self, **context):
         return context[self.name]
+
+    def dfs(self, callback):
+        callback(self)
+
 
 class Selection:
     def __init__(self, variable, selection_path):
@@ -25,15 +140,43 @@ class Selection:
     def is_strict(self):
         return selection_path != None
 
-    def evaluate(self, context):
-        result = self.variable.evaluate(context)
+    def assign(self, value, **context):
+        cursor = self.variable.evaluate(**context)
+        if self.selection_path:
+            for name in self.selection_path[:-1]:
+                cursor = cursor.get(name, None)
+                # TODO: Error handling needed
+                if not cursor:
+                    tmp = Object()
+                    cursor[name] = tmp
+                    cursor = tmp
+        cursor[self.selection_path[-1]] = value
+
+    def execute(self, **context):
+        result = self.variable.evaluate(**context)
+        if self.selection_path:
+            for name in self.selection_path:
+                result = result[name]
+        return result 
+
+    def evaluate(self, **context):
+        result = self.variable.evaluate(**context)
         if self.selection_path:
             for name in self.selection_path:
                 result = result[name]
         return result
 
+    def link(self, functions):
+        pass
+
+    @property
     def variables(self):
         return set([self.variable.name])
+
+    def dfs(self, callback):
+        callback(self)
+        self.variable.dfs(callback)
+
 
 class Event:
     def __init__(self, name, variables):
@@ -48,12 +191,21 @@ class Event:
             var_list += str(self.variables[-1])
         return "#%s(%s)" % (str(self.name), var_list)
 
-    def variable(self):
+    @property
+    def variables(self):
         return set([x.name for x in self.variables])
 
+    def dfs(self, callback):
+        callback(self)
+        for variable in self.variables:
+            variable.dfs(callback)
+
 class Strategy:
+
     def __init__(self, rules):
         self.rules = rules
+        self.gos = []
+
 
     def __str__(self):
         result = ""
@@ -61,6 +213,49 @@ class Strategy:
             result += "%s;" % r
         return result
 
+    def link(self, functions = None):
+        self.linked = True
+        if functions:
+            f = dict(self._functions.items() + functions.items())
+        else:
+            f = self._functions
+        for rule in self.rules:
+            rule.link(f)
+
+    def run(self):
+        cycle = 0
+        for i in range(0,10):
+            to_execute = []
+            for rule in self.rules:
+                _, variables = rule.variables()
+                for values in product(self.gos, repeat = len(variables)):
+                    context = dict(zip(variables, values))
+                    if rule.evaluate(**context):
+                        to_execute.append((context, rule))
+            for context, rule in to_execute:
+                self.gos += rule.execute(**context) 
+
+    def _normalize(self, dictionary):
+        for k, v in dictionary.iteritems():
+            if v is not None:
+                if isinstance(v, dict):
+                    dictionary[k] = self._normalize(v)
+                else:
+                    dictionary[k] = v
+        return dictionary
+
+
+    def addToGos(self, obj):
+        if isinstance(obj, dict):
+            self.gos.append(self._normalize(obj))
+        else:
+            self.gos.append(ObjectWrapper(obj))
+
+    def dfs(self, callback):
+        callback(self)
+        for rule in self.rules:
+            rule.dfs(callback)
+        
 
 class Rule:
 
@@ -81,28 +276,58 @@ class Rule:
         return "(%s)->(%s)" % (conditions, actions)
 
     def variables(self):
-        event_variables = set()
-        loose_variables = set()
+        event_variables = set([])
+        loose_variables = set([])
         first = True
         for condition in self.conditions:
             if isinstance(condition, Event):
                 if first:
-                    event.union(condition.variables())
+                    event_variables.union(condition.variables)
                     first = False
             else:
-                loose_variables = loose_variables.union(condition.variables())
-                return (event_variables, loose_variables)
+                loose_variables = loose_variables.union(condition.variables)
+        return (event_variables, loose_variables)
 
-class Test:
+    def evaluate(self, **context):
+        result = True
+        for condition in self.conditions:
+            result = result and condition.evaluate(**context)
+        return result
+
+    def execute(self, **context):
+        output = []
+        for action in self.actions:
+            result = action.execute(**context)
+            if result:
+                name, obj = result
+                context[name] = obj
+                output.append(obj)
+        return output
+
+    def link(self, functions):
+        for condition in self.conditions:
+            condition.link(functions)
+        for action in self.actions:
+            action.link(functions)
+
+    def dfs(self, callback):
+        callback(self)
+        for condition in self.conditions:
+            condition.dfs(callback)
+        for action in self.actions:
+            action.dfs(callback)
+
+class Condition:
     pass
 
-class Operator(Test):
+class Operator(Condition):
     
     def _parenth(self, operand):
         if hasattr(operand, "priority") and operand.priority < self.priority:
             return "(%s)" % str(operand)
         else:
-            return str(operand)
+            return str(operand)  
+
 
 class UnaryOperator(Operator):
 
@@ -112,11 +337,19 @@ class UnaryOperator(Operator):
     def __str__(self):
         return "%s%s" % (self.operator, self._parenth(self.operand))
 
-    def evaluate(self, context):
-        return self.operation(self.operand.evaluate(context))
+    def execute(self, **context):
+        return self.operation(self.operand.execute(**context))
 
+    def evaluate(self, **context):
+        return self.operation(self.operand.evaluate(**context))
+
+    @property
     def variables(self):
-        return self.operand.variables()
+        return self.operand.variables
+
+    def dfs(self, callback):
+        callback(self)
+        self.operand.dfs(callback)
 
 class BinnaryOperator(Operator):
     
@@ -127,13 +360,27 @@ class BinnaryOperator(Operator):
     def __str__(self):
         return "%s %s %s" % (self._parenth(self.loperand), self.operator, self._parenth(self.roperand))
 
-    def evaluate(self, context):
-        return self.operation(self.loperand.evaluate(context), self.roperand.evaluate(context))
+    def execute(self, **context):
+        return self.operation(self.loperand.execute(**context), self.roperand.execute(**context))
 
+    def evaluate(self, **context):
+        return self.operation(self.loperand.evaluate(**context), self.roperand.evaluate(**context))
+
+    @property
     def variables(self):
-        return self.roperand.variables().union(self.loperand.variables())
+        return self.roperand.variables.union(self.loperand.variables)
 
-class Assignment:
+    def dfs(self, callback):
+        callback(self)
+        self.loperand.dfs(callback)
+        self.roperand.dfs(callback)
+
+class Action:
+
+    def link(self, functions):
+        pass
+
+class Assignment(Action):
 
     def __init__(self, selection, test):
         self.selection = selection
@@ -142,19 +389,45 @@ class Assignment:
     def __str__(self):
         return "%s = %s" % (str(self.selection), str(self.test))
 
-class New:
+    def link(self, functions):
+        self.test.link(functions)
+
+    def execute(self, **context):
+        value = self.test.execute(**context)
+        self.selection.assign(value, **context)
+
+    def dfs(self, callback):
+        callback(self)
+        self.selection.dfs(callback)
+        self.test.dfs(callback)
+
+class New(Action):
     def __init__(self, variable):
         self.variable = variable
 
     def __str__(self):
         return "new %s" % str(self.variable)
 
-class Delete:
+    def execute(self, **context):
+        return (self.variable.name, Object())
+
+    def dfs(self, callback):
+        callback(self)
+        self.variable.dfs(callback)
+
+class Delete(Action):
     def __init__(self, variable):
         self.variable = variable
 
     def __str__(self):
         return "delete %s" % str(self.variable)
+
+    def execute(self, **context):
+        context[self.variable.name].__delitem__ = True
+
+    def dfs(self, callback):
+        callback(self)
+        self.variable.dfs(callback)
 
 class Or(BinnaryOperator):
     operator = "||"
@@ -269,18 +542,25 @@ class Power(BinnaryOperator):
     priority = 12
     operation = pow
 
-class Literal(Test):
+class Literal:
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return repr(self.value)
 
-    def evaluate(self, context):
+    def evaluate(self, **context):
         return self.value
 
+    def execute(self, **context):
+        return self.value
+
+    @property
     def variables(self):
         return set()
+
+    def dfs(self, callback):
+        callback(self)
 
 class StringLiteral(Literal):
     def __str__(self):
@@ -294,7 +574,7 @@ class BooleanLiteral(Literal):
 class NumberLiteral(Literal):
     pass
 
-class FunctionExecution(Test):
+class FunctionExecution(Condition, Action):
 
     def __init__(self, name, params):
         self.name = name
@@ -307,3 +587,24 @@ class FunctionExecution(Test):
                 param_list += "%s, " % str(r)
             param_list += str(self.params[-1])
         return "%s(%s)" % (str(self.name), param_list)
+
+    def execute(self, **context):
+        param_list = []
+        for p in self.params:
+            param_list.append(p.execute(**context))
+        return self.impl(*param_list)
+
+    @property
+    def variables(self):
+        result = set()
+        for param in self.params:
+            result = result.union(param.variables)
+        return result
+
+    def link(self, impl):
+        self.impl = impl
+
+    def dfs(self, callback):
+        callback(self)
+        for param in self.params:
+            param.dfs(callback)

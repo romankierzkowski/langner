@@ -51,6 +51,11 @@ tokens = (
    'NAME'
 )
 
+def t_NUMBER(t):
+    r'(\+|\-)?[0-9]+(\.[0-9]+((e|E)(\+|\-)?[0-9]+)?)?'
+    t.value = eval(t.value)
+    return t
+
 t_NAME = r'[a-zA-Z][a-zA-Z0-9_]*'
 
 t_ARROW   = r'->'
@@ -93,6 +98,9 @@ t_SEMICOLON = r';'
 
 t_EVENT_INTRO = r'\#'
 
+def t_UNDEF(t):
+    r'undefined'
+
 def t_STRING(t):
     r'"[^\n"]*"'
     t.value = eval(t.value) # eval("'''%s'''" % t.value[1:-1])
@@ -111,10 +119,7 @@ def t_DELETE(t):
     r'delete'
     return t
 
-def t_NUMBER(t):
-    r'(\+|\-)?[0-9]+(\.[0-9]+((e|E)(\+|\-)?[0-9]+)?)?'
-    t.value = eval(t.value)
-    return t
+
 
 t_ignore = ' \n\t'
 

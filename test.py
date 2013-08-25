@@ -1,5 +1,6 @@
 import unittest
 from parser import parser
+from ast import Object
 
 class SyntaxTests(unittest.TestCase):
 
@@ -99,21 +100,43 @@ class SyntaxTests(unittest.TestCase):
         pass 
 
     def evaluate(self, condition, expected, **kwargs):
-        context = kwargs.get("context", None)
+        context = kwargs.get("context", {})
         rule = "(%s)->(new x);" % condition
         strategy = parser.parse(rule);
-        result = strategy.rules[0].conditions[0].evaluate(context)
+        result = strategy.rules[0].conditions[0].evaluate(**context)
         self.assertEqual(result, expected)
 
+    # Variables
 
     def testVariables(self):
-        self.variables("x",(set([]), set(['x'])) )
+        self.variables("x", [], ['x'])
+        self.variables("x, y", [], ['x', 'y'])
+        self.variables("x, y", [], ['x', 'y'])
+        self.variables("x, y, foo(a,b)", [], ['x', 'y', 'a', 'b'])
+        self.variables("x, y, foo(a.foo, b > y)", [], ['x', 'y', 'a', 'b'])
 
-    def variables(self, condition, expected):
+
+    def variables(self, condition, event_vars, loose_vars):
         rule = "(%s)->(new x);" % condition
         strategy = parser.parse(rule);
         result = strategy.rules[0].variables()
-        self.assertEqual(result, expected)
+        self.assertEqual(result, (set(event_vars), set(loose_vars)))
+
+    # Object:
+
+    def testObject(self):
+        o = Object()
+        o["a"] = 1
+        o["b"] = 3
+        self.assertEqual(len(o), 2)
+        self.assertEqual("a" in o, True)
+        self.assertEqual("c" in o, False)
+        self.assertTrue(iter(o))
+        self.assertTrue(o["a"], 1)
+        self.assertTrue(o["b"], 3)
+        self.assertEqual(o["c"], Object.UNDEF)
+        self.assertEqual(o.items(), [("a", 1), ("b", 3)])
+        self.assertEqual(o.values(), [1, 3])
 
 def main():
     unittest.main()

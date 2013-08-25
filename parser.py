@@ -308,6 +308,22 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc()
 
+# Standard functions:
+def _print(x):
+    print x
+
+def linker(functions):
+    def link(node):
+        if isinstance(node, FunctionExecution):
+            node.link(functions[node.name])
+    return link
+
+def build(code, functions):
+    strategy = parser.parse(code)
+    standard = { "print": _print }
+    strategy.dfs(linker(dict(standard.items() + functions.items())))
+    return strategy
+
 def main():
     while True:
         try:
