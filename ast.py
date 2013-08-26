@@ -229,20 +229,25 @@ class Strategy:
         cycle = 0
         for i in range(0,10):
             to_execute = []
-            for item in self.gos:
-                if item.__deleted__:
-                    self.gos.remove(item)
 
+            # EVALUATION:
             for rule in self.rules:
                 _, variables = rule.variables()
                 for values in product(self.gos, repeat = len(variables)):
                     context = dict(zip(variables, values))
                     if rule.evaluate(**context):
                         to_execute.append((context, rule))
+            
+            # EXECUTION:
             to_gos = []
             for context, rule in to_execute:
                 to_gos += rule.execute(**context)
             self.gos = self.gos + to_gos
+
+            # REMOVAL:
+            for item in self.gos:
+                if item.__deleted__:
+                    self.gos.remove(item)
 
 
     def _normalize(self, dictionary):
