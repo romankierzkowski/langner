@@ -6,7 +6,7 @@ class Object(MutableMapping):
 
     def __init__(self):
         self.fields = {}
-        self.deleted = False
+        self.__deleted__  = False
 
     def __len__(self):
         return self.fields.__len__()
@@ -48,7 +48,7 @@ class ObjectWrapper(Object):
 
     def __init__(self, wrapped):
         self.wrapped = wrapped
-        self.deleted = False
+        self.__deleted__  = False
 
     def __len__(self):
         return len(dir(self.wrapped))
@@ -227,8 +227,12 @@ class Strategy:
 
     def run(self):
         cycle = 0
-        for i in range(0,5):
+        for i in range(0,10):
             to_execute = []
+            for item in self.gos:
+                if item.__deleted__:
+                    self.gos.remove(item)
+
             for rule in self.rules:
                 _, variables = rule.variables()
                 for values in product(self.gos, repeat = len(variables)):
@@ -431,7 +435,7 @@ class Delete(Action):
         return "delete %s" % str(self.variable)
 
     def execute(self, **context):
-        context[self.variable.name].__delitem__ = True
+        context[self.variable.name].__deleted__ = True
 
     def dfs(self, callback):
         callback(self)
