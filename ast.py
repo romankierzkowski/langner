@@ -119,7 +119,10 @@ class Variable:
         return self.name
 
     def evaluate(self, **context):
-        return context[self.name]
+        return context[self.name] is not Object.UNDEF
+
+    def execute(self, **context):
+        return context[self.name] 
 
     def dfs(self, callback):
         callback(self)
@@ -141,7 +144,7 @@ class Selection:
         return selection_path != None
 
     def assign(self, value, **context):
-        cursor = self.variable.evaluate(**context)
+        cursor = self.variable.execute(**context)
         if self.selection_path:
             for name in self.selection_path[:-1]:
                 cursor = cursor.get(name, None)
@@ -153,14 +156,14 @@ class Selection:
         cursor[self.selection_path[-1]] = value
 
     def execute(self, **context):
-        result = self.variable.evaluate(**context)
+        result = self.variable.execute(**context)
         if self.selection_path:
             for name in self.selection_path:
                 result = result[name]
         return result 
 
     def evaluate(self, **context):
-        result = self.variable.evaluate(**context)
+        result = self.variable.execute(**context)
         if self.selection_path:
             for name in self.selection_path:
                 result = result[name]
@@ -224,7 +227,7 @@ class Strategy:
 
     def run(self):
         cycle = 0
-        for i in range(0,10):
+        for i in range(0,5):
             to_execute = []
             for rule in self.rules:
                 _, variables = rule.variables()
@@ -232,8 +235,11 @@ class Strategy:
                     context = dict(zip(variables, values))
                     if rule.evaluate(**context):
                         to_execute.append((context, rule))
+            to_gos = []
             for context, rule in to_execute:
-                self.gos += rule.execute(**context) 
+                to_gos += rule.execute(**context)
+            self.gos = self.gos + to_gos
+
 
     def _normalize(self, dictionary):
         for k, v in dictionary.iteritems():
@@ -248,6 +254,8 @@ class Strategy:
     def addToGos(self, obj):
         if isinstance(obj, dict):
             self.gos.append(self._normalize(obj))
+        elif isinstance(obj, Object):
+            self.gos.append(obj)
         else:
             self.gos.append(ObjectWrapper(obj))
 

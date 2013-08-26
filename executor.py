@@ -2,16 +2,17 @@ from parser import build
 from ast import Object, ObjectWrapper
 
 input = '''
-    (a) -> (new b);
-    (a) -> (print(a)) 
-    (True)->(print("--------------"))
+    (a) -> (print(a));
+	(a.x == 0) -> (new b, b.x = 0, a.x = a.x + 1);
+
+    (True)->(print("--------------"));
 '''
 
 
 strat = build(input, {})
 
 o = Object()
-o.x = 0
+o["x"] = 0
 
 strat.addToGos(o)
 
