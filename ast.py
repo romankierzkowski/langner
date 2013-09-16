@@ -1,6 +1,8 @@
 from operator import *
 from collections import MutableMapping
 from itertools import product
+from threading import *
+import thread
 
 class Object(MutableMapping):
 
@@ -184,7 +186,7 @@ class Selection:
 class Event:
     def __init__(self, name, variables):
         self.name = name
-        self.variables = variables
+        self.variables = variables or []
 
     def __str__(self):
         var_list = ""
@@ -203,11 +205,16 @@ class Event:
         for variable in self.variables:
             variable.dfs(callback)
 
+    def evaluate(self, **context):
+        return True
+
 class Strategy:
 
     def __init__(self, rules):
         self.rules = rules
         self.gos = []
+        self.events = []
+        self.events_lock = Lock()
 
 
     def __str__(self):
@@ -225,18 +232,43 @@ class Strategy:
         for rule in self.rules:
             rule.link(f)
 
+    def _trigger_event(self, name, *args):
+        self.events.append((name, args))
+
     def run(self):
+        thread.start_new_thread(self._run, ())
+
+    def _run(self):
         cycle = 0
-        for i in range(0,10):
+        while True:
+            
+            self.events_lock.acquire()
+            triggered = list(self.events)
+            del self.events[0:len(self.events)]
+            self.events_lock.release()
+            
             to_execute = []
 
             # EVALUATION:
             for rule in self.rules:
-                _, variables = rule.variables()
-                for values in product(self.gos, repeat = len(variables)):
-                    context = dict(zip(variables, values))
-                    if rule.evaluate(**context):
-                        to_execute.append((context, rule))
+                events = rule.events()
+                if events:
+                    name, params_names = events[0]
+                    filtered = [e for e in triggered if e[0] == name]
+                    for _, values in filtered:
+                        ev_context = dict(zip(params_names, values))
+                        _, variables = rule.variables()
+                        for values in product(self.gos, repeat = len(variables)):
+                            context = dict(zip(variables, values))
+                            context.update(ev_context)
+                            if rule.evaluate(**context):
+                                to_execute.append((context, rule))
+                else:
+                    _, variables = rule.variables()
+                    for values in product(self.gos, repeat = len(variables)):
+                        context = dict(zip(variables, values))
+                        if rule.evaluate(**context):
+                            to_execute.append((context, rule))
             
             # EXECUTION:
             to_gos = []
@@ -248,7 +280,6 @@ class Strategy:
             for item in self.gos:
                 if item.__deleted__:
                     self.gos.remove(item)
-
 
     def _normalize(self, dictionary):
         for k, v in dictionary.iteritems():
@@ -304,6 +335,13 @@ class Rule:
             else:
                 loose_variables = loose_variables.union(condition.variables)
         return (event_variables, loose_variables)
+
+    def events(self):
+        result = []
+        for condition in self.conditions:
+            if isinstance(condition, Event):
+                result.append((condition.name, [c.name for c in condition.variables]))
+        return result
 
     def evaluate(self, **context):
         result = True
