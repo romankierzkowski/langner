@@ -8,7 +8,6 @@ What intialized by @romankierzkowski
 ------------------------
 
 ```python
-
 from parser import build
 
 input = '''
@@ -20,10 +19,6 @@ strat.run()
 ```
 
 ```
-Hello world!
-Hello world!
-Hello world!
-Hello world!
 Hello world!
 Hello world!
 Hello world!
