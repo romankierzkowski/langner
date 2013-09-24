@@ -236,7 +236,7 @@ class Strategy:
         self.events.append((name, args))
 
     def run(self):
-        thread.start_new_thread(self._run, ())
+        out = thread.start_new_thread(self._run, ())
 
     def _run(self):
         cycle = 0
