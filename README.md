@@ -4,10 +4,28 @@ What is Langer?
 -----------------------
 What intialized by @romankierzkowski 
 
-Goals of Langer?
+'Hello world' in Langer?
 ------------------------
 
+```python
 
+from parser import build
 
-* [x] Simple syntax
-* [ ] Polish :heart:
+input = '''
+    (True) -> (print("Hello world!"));
+'''
+
+strat = build(input, {})
+strat.run()
+```
+
+```
+Hello world!
+Hello world!
+Hello world!
+Hello world!
+Hello world!
+Hello world!
+Hello world!
+...
+```
