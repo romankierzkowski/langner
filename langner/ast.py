@@ -3,6 +3,7 @@ from collections import MutableMapping
 from itertools import product
 from threading import *
 import thread
+import threading
 
 class Object(MutableMapping):
 
@@ -190,7 +191,7 @@ class Event:
 
     def __str__(self):
         var_list = ""
-        if self.variables != None: 
+        if self.variables: 
             for r in self.variables[:-1]:
                 var_list += "%s, " % str(r)
             var_list += str(self.variables[-1])
@@ -208,9 +209,10 @@ class Event:
     def evaluate(self, **context):
         return True
 
-class Strategy:
+class Strategy(threading.Thread):
 
     def __init__(self, rules):
+        threading.Thread.__init__(self)
         self.rules = rules
         self.gos = []
         self.events = []
@@ -236,7 +238,7 @@ class Strategy:
         self.events.append((name, args))
 
     def run(self):
-        out = thread.start_new_thread(self._run, ())
+        self._run()
 
     def _run(self):
         cycle = 0

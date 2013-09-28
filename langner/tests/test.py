@@ -1,6 +1,6 @@
 import unittest
-from parser import parser
-from ast import Object
+from langner.parser import parser
+from langner.ast import Object
 
 class SyntaxTests(unittest.TestCase):
 

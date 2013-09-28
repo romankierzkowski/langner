@@ -1,4 +1,4 @@
-from parser import build
+from langner import build
 
 
 input = '''
@@ -7,6 +7,4 @@ input = '''
 
 strat = build(input, {})
 strat.run()
-
-raw_input()
 

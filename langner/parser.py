@@ -306,45 +306,4 @@ def p_error(p):
 
 
 # Build the parser
-parser = yacc.yacc()
-
-# Standard functions:
-def _print(x):
-    print x
-
-def linker(functions):
-    def link(node):
-        if isinstance(node, FunctionExecution):
-            node.link(functions[node.name])
-    return link
-
-import types
-
-def triggers_creator_factory(strategy):
-    def triggers_creator(node):
-        if isinstance(node, Event):
-            def trigger(self, *args):
-                self._trigger_event(node.name, *args)
-            setattr(strategy, node.name, types.MethodType(trigger, strategy))
-    return triggers_creator
-
-
-def build(code, functions):
-    strategy = parser.parse(code)
-    standard = { "print": _print }
-    strategy.dfs(linker(dict(standard.items() + functions.items())))
-    strategy.dfs(triggers_creator_factory(strategy))
-    return strategy
-
-def main():
-    while True:
-        try:
-            s = raw_input('rule> ')
-        except EOFError:
-            break
-        if not s: continue
-        result = parser.parse(s)
-        print result
-
-if __name__ == '__main__':
-    main()
+parser = yacc.yacc(outputdir="./langner", debug=0)
