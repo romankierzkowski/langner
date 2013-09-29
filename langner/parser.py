@@ -306,4 +306,4 @@ def p_error(p):
 
 
 # Build the parser
-parser = yacc.yacc(outputdir="./langner", debug=0)
+parser = yacc.yacc(write_tables=0, debug=0)

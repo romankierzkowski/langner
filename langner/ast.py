@@ -144,7 +144,7 @@ class Selection:
         return result
 
     def is_strict(self):
-        return selection_path != None
+        return self.selection_path is not None
 
     def assign(self, value, **context):
         cursor = self.variable.execute(**context)
@@ -290,10 +290,11 @@ class Strategy(threading.Thread):
                     dictionary[k] = self._normalize(v)
                 else:
                     dictionary[k] = v
-        return dictionary
+        result = Object()
+        result.fields = dictionary
+        return result
 
-
-    def addToGos(self, obj):
+    def add_to_gos(self, obj):
         if isinstance(obj, dict):
             self.gos.append(self._normalize(obj))
         elif isinstance(obj, Object):

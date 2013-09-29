@@ -1,0 +1,7 @@
+Langer Change Log
+
+Version 0.1
+
+  Contributors: Roman Kierzkowski
+
+  Innitial version with basic implemetation of reasoning and event handling.

@@ -22,7 +22,7 @@ def triggers_creator_factory(strategy):
     return triggers_creator
 
 
-def build(code, functions):
+def build(code, functions = {}):
     strategy = parser.parse(code)
     standard = { "print": _print }
     strategy.dfs(linker(dict(standard.items() + functions.items())))
