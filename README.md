@@ -4,9 +4,9 @@ Langner
 
 What is Langer?
 -----------------------
-Langer is an **object oriented, rule based programming language**. Its interpreter is shipped as an **Python library**.  It was created to express behavior strategies. It has simple syntax based on languages like Python and C. It was designed to be convenient and readable for a programmer, that it can be easily used in [genetic programming](http://en.wikipedia.org/wiki/Genetic_programming). 
+Langer is an **object oriented, rule based programming language**. Its interpreter is shipped as an **Python library**.  It was created to express behavior strategies. It has simple syntax based on languages like Python and C. It was designed to be convenient and readable for a programmer, but it can be easily used in [genetic programming](http://en.wikipedia.org/wiki/Genetic_programming) as well.  
 
-Langner was created as an research language. It is **not general purpose**, but it is general enough that it might be useful in other areas. 
+Langner was created as an research language. It is **not general purpose**, but it is general enough that it might be useful in other areas as well. It is avilable under [MIT license](http://opensource.org/licenses/MIT).
 
 Where can I get it?
 -----------------------
@@ -39,21 +39,116 @@ Hello world!
 ...
 ```
 
-Langner parser is avilable as a `build()` function in `langner` module. It takes code in a string. The **white space characters are ommited** when the input is parsed. Any formatting should be accepted. The functions returns the langner.ast.Strategy object. The Strategy extends `threading.Thread` class. It can be run by executing `start()` method, but in most of the examples we prefare just to execute `run()` method in the main thread. The program blocks until its  interrupted (CTRL+C). The following examples will present only the `input` variable. Rest of the code will stay unchanged.
+Langner parser is avilable as a `build()` function in `langner` module. It takes code in a string. The **white space characters are ommited** when the input is parsed. Any formatting should be accepted. The functions returns the langner.ast.Strategy object. The Strategy extends `threading.Thread` class. It can be run by executing `start()` method, but in most of the examples we prefare just to execute `run()` method in the main thread. The program blocks until its  interrupted (CTRL+C). If there is no change in the code, the following examples will present only the `input` variable.
 
 The Langner code is **list of rules separated with semicolons**. Each rule has two sections - **conditions and actions**. The rule has the following syntax:
 ```
-(condition1, condition2, ..., condtionN) -> (action1, action2, ..., actionN);
+(cond1, cond2, ..., condN) -> (action1, action2, ..., actionN);
 ```
 
 The Langer **strategy is evaluted in an infinite loop**. If the condtions are true, the actions are executed. In the given example the condition is always true and the action executes embaded function `print()` that prints to the standard output. The strategy will greet the world for the infinity.
+
+### Global Object Space ###
+
+The key concept behind the Langner is the **Global Object Space (GOS)**. The rules are evaluate against objects in GOS.
+```python
+from langner import build
+
+input = '''
+    (x) -> (print(x.msg));
+'''
+
+strat = build(input)
+strat.add_to_gos({"msg":"Hello"})
+strat.add_to_gos({"msg":"World!"})
+
+strat.run()
+```
+
+The output:
+```
+Hello
+World!
+Hello
+World!
+...
+```
+
+One was of getting objects to GOS is by adding them with `add_to_gos()` method. This method takes dictionaries that maps a field name to a field value.
+
+When the variable appears in a condition you may read it as an **universal quantification**. In the given example we would read the rule as: *For each object x in GOS, print x.msg to the console.* Then each object in GOS is substituted under x. The variable condition is always true for each object in a GOS. Let's consider more complicated example:
+
+```python
+from langner import build
+
+input = '''
+    (x.ok) -> (print(x.msg));
+'''
+
+strat = build(input)
+
+strat.add_to_gos({"ok":True, "msg":"Hello"})
+strat.add_to_gos({"ok":False, "msg":"Goodbye"})
+strat.add_to_gos({"ok":True, "msg":"World!"})
+
+strat.run()
+```
+
+The following code will generate exactly the same output as previous example. The "Goodbye" message will not be printed. The rule can be read: *For each object x in GOS that x.ok is true, print x.msg to the console.*
+
+Although, the real world might be bit more complex than the next example let's face the truth about dating: 
+
+```python
+from langner import build
+
+input = '''
+    (x.sex=="f", y.sex=="m", x.score == y.score) -> (print(x.name + " dates " + y.name));
+'''
+
+strat = build(input)
+
+# Girls:
+strat.add_to_gos({"name":"Kate", "sex":"f", "score":3})
+strat.add_to_gos({"name":"Meg", "sex":"f", "score":7})
+strat.add_to_gos({"name":"Sandy", "sex":"f", "score":10})
+
+# Boys:
+strat.add_to_gos({"name":"John", "sex":"m", "score":3})
+strat.add_to_gos({"name":"Ben", "sex":"m", "score":7})
+strat.add_to_gos({"name":"Alex", "sex":"m", "score":10})
+
+strat.run()
+
+```
+The output:
+```
+Kate dates John
+Meg dates Ben
+Sandy dates Alex
+Kate dates John
+Meg dates Ben
+Sandy dates Alex
+...
+```
+
+The following rule contains two variables. **The actions are executed only if, each condition in the rule is fullfilled.** In the given example the rule might be read: *For each object x and for each object y, that x is a female and y is a male and x and y have the same score, print the copule to the console.*
+
+### Creating and Removing Objects from GOS ###
+
+### Functions ###
+
+### Events ###
+
+### Conditions and Actions ###
+
+### Execution Order ###
 
 Why a new language?
 -----------------------
 For my research I needed a language that:
 
-1. allows experssing behaviour strategy in a simple rule based fashion (if x is true, do y),
-2. the strategy would be able to react to events from the environment (if z happend, do v),
-3. the language should have a syntax that can be used in [genetic programming (GP)](http://en.wikipedia.org/wiki/Genetic_programming) (still easily readable for a human).
+1. allows experssing behaviour strategy in a simple rule based fashion,
+2. the strategy would be able to react to events from the environment,
+3. the language should have a syntax that can be used in [genetic programming (GP)](http://en.wikipedia.org/wiki/Genetic_programming).
 
 The procedural programming languages could match two first goals, but their syntax is to complicated for GP. There are well developed rule based languages - for example Prolog. They are intended to work in question and answer mode rather than continious flow that changes its directions on the events.
