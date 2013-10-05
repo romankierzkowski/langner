@@ -151,4 +151,4 @@ For my research I needed a language that:
 2. the strategy would be able to react to events from the environment,
 3. the language should have a syntax that can be used in [genetic programming (GP)](http://en.wikipedia.org/wiki/Genetic_programming).
 
-The procedural programming languages could match two first goals, but their syntax is to complicated for GP. There are well developed rule based languages - for example Prolog. They are intended to work in question and answer mode rather than continious flow that changes its directions on the events.
+The procedural programming languages could match two first goals, but their syntax is too complicated for GP. There are well developed rule based languages - for example Prolog. They are intended to work in question and answer mode rather than continious flow that changes its directions on the events.
