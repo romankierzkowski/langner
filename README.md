@@ -41,12 +41,12 @@ Hello world!
 
 Langner parser is avilable as a `build()` function in `langner` module. It takes code in a string. The **white space characters are ommited** when the input is parsed. Any formatting should be accepted. The functions returns the langner.ast.Strategy object. The Strategy extends `threading.Thread` class. It can be run by executing `start()` method, but in most of the examples we prefare just to execute `run()` method in the main thread. The program blocks until its  interrupted (CTRL+C). The following examples will present only the `input` variable. Rest of the code will stay unchanged.
 
-The Langner code is list of rules separated with semicolons. The rule has two sections - conditions and actions. The rule has the following syntax:
+The Langner code is **list of rules separated with semicolons**. Each rule has two sections - **conditions and actions**. The rule has the following syntax:
 ```
 (condition1, condition2, ..., condtionN) -> (action1, action2, ..., actionN);
 ```
 
-The Langer strategy is evaluted in an infinite loop. If the condtions are true, the actions are executed. In the given example the condition is always true and the action executes embaded function `print()` that prints to the standard output. The strategy will greet the world for the infinity.
+The Langer **strategy is evaluted in an infinite loop**. If the condtions are true, the actions are executed. In the given example the condition is always true and the action executes embaded function `print()` that prints to the standard output. The strategy will greet the world for the infinity.
 
 Why a new language?
 -----------------------
