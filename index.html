@@ -19,7 +19,7 @@
 
         <header>
           <h1>Langner</h1>
-          <h2></h2>
+          <h2>Programing language for expressing strategies</h2>
         </header>
 
         <section id="downloads" class="clearfix">
@@ -34,19 +34,28 @@
           <h1>
 <a name="langner" class="anchor" href="#langner"><span class="octicon octicon-link"></span></a>Langner</h1>
 
+<p><strong>Disclaimer:</strong> Langner is in <strong>very alpha</strong>. The criticism, ideas and forbearance are <strong>highly appreciated</strong>. If you have any question or remark feel free to share it on the <a href="https://groups.google.com/forum/#!forum/langner">Langner forum</a>.</p>
+
 <h2>
 <a name="what-is-langer" class="anchor" href="#what-is-langer"><span class="octicon octicon-link"></span></a>What is Langer?</h2>
 
-<p>Langer is a programming <strong>language for expressing strategies</strong>. Enigmatic? Have you ever wondered to make an intelligent robot? (No? Really, not even once? Weirdo...) The robots are performing actions to accomplish their goals. They must adjust their behavior to things that happen. That's behavior strategy - the way the decisions on actions are made according to events that occur. Langner was created to describe it in convenient and readable form.</p>
+<p>Langer is an <strong>object oriented, rule based programming language</strong>. Its interpreter is shipped as an <strong>Python library</strong>.  It was created to express behavior strategies. It has simple syntax based on languages like Python and C. It was designed to be convenient and readable for a programmer, that it can be easily used in <a href="http://en.wikipedia.org/wiki/Genetic_programming">genetic programming</a>. </p>
+
+<p>Langner was created as an research language. It is <strong>not general purpose</strong>, but it is general enough that it might be useful in other areas. </p>
 
 <h2>
-<a name="why-new-language" class="anchor" href="#why-new-language"><span class="octicon octicon-link"></span></a>Why new language?</h2>
+<a name="where-can-i-get-it" class="anchor" href="#where-can-i-get-it"><span class="octicon octicon-link"></span></a>Where can I get it?</h2>
 
-<p>The generic answer would be: because the existing languages does not suit the need. Of course, there are well developed languages for reasoning. For example Prolog. But they work in question - answer mode, rather than action - reaction. 
-Instead of .</p>
+<p>The easiest option is via Python package manager:</p>
+
+<div class="highlight highlight-bash"><pre> <span class="nv">$ </span>pip install langner
+</pre></div>
 
 <h2>
-<a name="hello-world-in-langer" class="anchor" href="#hello-world-in-langer"><span class="octicon octicon-link"></span></a>'Hello world' in Langer?</h2>
+<a name="getting-started-guide" class="anchor" href="#getting-started-guide"><span class="octicon octicon-link"></span></a>Getting Started Guide</h2>
+
+<h3>
+<a name="hello-world-in-langer" class="anchor" href="#hello-world-in-langer"><span class="octicon octicon-link"></span></a>'Hello world' in Langer?</h3>
 
 <div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">langner</span> <span class="kn">import</span> <span class="n">build</span>
 
@@ -54,15 +63,37 @@ Instead of .</p>
 <span class="s">    (True) -&gt; (print("Hello world!"));</span>
 <span class="s">'''</span>
 
-<span class="n">strat</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">{})</span>
+<span class="n">strat</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
 <span class="n">strat</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
+
+<p>The ouput:</p>
 
 <pre><code>Hello world!
 Hello world!
 Hello world!
 ...
 </code></pre>
+
+<p>Langner parser is avilable as a <code>build()</code> function in <code>langner</code> module. It takes code in a string. The <strong>white space characters are ommited</strong> when the input is parsed. Any formatting should be accepted. The functions returns the langner.ast.Strategy object. The Strategy extends <code>threading.Thread</code> class. It can be run by executing <code>start()</code> method, but in most of the examples we prefare just to execute <code>run()</code> method in the main thread. The program blocks until its  interrupted (CTRL+C). The following examples will present only the <code>input</code> variable. Rest of the code will stay unchanged.</p>
+
+<p>The Langner code is <strong>list of rules separated with semicolons</strong>. Each rule has two sections - <strong>conditions and actions</strong>. The rule has the following syntax:</p>
+
+<pre><code>(condition1, condition2, ..., condtionN) -&gt; (action1, action2, ..., actionN);
+</code></pre>
+
+<p>The Langer <strong>strategy is evaluted in an infinite loop</strong>. If the condtions are true, the actions are executed. In the given example the condition is always true and the action executes embaded function <code>print()</code> that prints to the standard output. The strategy will greet the world for the infinity.</p>
+
+<h2>
+<a name="why-a-new-language" class="anchor" href="#why-a-new-language"><span class="octicon octicon-link"></span></a>Why a new language?</h2>
+
+<p>For my research I needed a language that:</p>
+
+<ol>
+<li>allows experssing behaviour strategy in a simple rule based fashion (if x is true, do y),</li>
+<li>the strategy would be able to react to events from the environment (if z happend, do v),</li>
+<li>the language should have a syntax that can be used in <a href="http://en.wikipedia.org/wiki/Genetic_programming">genetic programming (GP)</a> (still easily readable for a human).</li>
+</ol><p>The procedural programming languages could match two first goals, but their syntax is to complicated for GP. There are well developed rule based languages - for example Prolog. They are intended to work in question and answer mode rather than continious flow that changes its directions on the events.</p>
         </section>
 
         <footer>
