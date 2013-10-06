@@ -202,7 +202,28 @@ If the unidefined field is accessed as an object it returns `undef` as well.
 
 ### Functions ###
 
+You can **execute almost any function from Python in the context of Langner** providing you have passed it in the `build` function in `functions` parameter. You can **use functions both in actions and conditions**.  In the given example the standard `random` function is used:
 
+```python
+from langner import build
+from random import random
+
+input = '''
+    (True) -> (print(random()));
+'''
+
+strat = build(input, functions=[random])
+strat.run()
+```
+
+The output:
+```
+0.653709135292
+0.475016218464
+0.394916852958
+0.132886618414
+...
+```
 
 ### Events ###
 
