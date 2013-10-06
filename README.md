@@ -172,7 +172,7 @@ The output:
 ...
 ```
 
-Every evaluation cycle the `value` field in the object is decreased by one. When the field is equal 0 then the object is removed form GOS and the new object is created and initialized with a `field` value equal 3. In the example, there is always one object in the GOS.
+Every evaluation cycle the `value` field in the object is decreased by one. When the field is equal 0 then the object is removed form GOS and the new object is created and initialized with a `value` equal 3. In the example, there is always one object in the GOS.
 
 ### Undefined fields ###
 
