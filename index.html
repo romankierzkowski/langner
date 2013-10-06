@@ -113,7 +113,11 @@ World!
 
 <p>One was of getting objects to GOS is by adding them with <code>add_to_gos()</code> method. This method takes dictionaries that maps a field name to a field value.</p>
 
-<p>When the variable appears in a condition you may read it as an <strong>universal quantification</strong>. In the given example we would read the rule as: <em>For each object x in GOS, print x.msg to the console.</em> Then each object in GOS is substituted under x. The variable condition is always true for each object in a GOS. Let's consider more complicated example:</p>
+<p>When the variable appears in a condition you may read it as an <strong>universal quantification</strong>. In the given example we would read the rule as: </p>
+
+<p><em>For each object x in GOS, print x.msg to the console.</em> </p>
+
+<p>Then each object in GOS is substituted under x. The variable condition is always true for each object in a GOS. Let's consider more complicated example:</p>
 
 <div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">langner</span> <span class="kn">import</span> <span class="n">build</span>
 
@@ -130,7 +134,9 @@ World!
 <span class="n">strat</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 
-<p>The following code will generate exactly the same output as previous example. The "Goodbye" message will not be printed. The rule can be read: <em>For each object x in GOS that x.ok is true, print x.msg to the console.</em></p>
+<p>The following code will generate exactly the same output as previous example. The "Goodbye" message will not be printed. The rule can be read:</p>
+
+<p><em>For each object x in GOS that x.ok is true, print x.msg to the console.</em></p>
 
 <p>Although, the real world might be bit more complex than the next example let's face the truth about dating: </p>
 
@@ -167,10 +173,69 @@ Sandy dates Alex
 ...
 </code></pre>
 
-<p>The following rule contains two variables. <strong>The actions are executed only if, each condition in the rule is fullfilled.</strong> In the given example the rule might be read: <em>For each object x and for each object y, that x is a female and y is a male and x and y have the same score, print the copule to the console.</em></p>
+<p>The following rule contains two variables. <strong>The actions are executed only if, each condition in the rule is fullfilled.</strong> In the given example the rule might be read:</p>
+
+<p><em>For each object x and for each object y, that x is a female and y is a male and x and y have the same score, print the copule to the console.</em></p>
 
 <h3>
 <a name="creating-and-removing-objects-from-gos" class="anchor" href="#creating-and-removing-objects-from-gos"><span class="octicon octicon-link"></span></a>Creating and Removing Objects from GOS</h3>
+
+<p>The object can be added to GOS with <code>new &lt;variable&gt;</code> action and removed from GOS with <code>delete &lt;variable&gt;</code> action. After the object is created, it can be access via variable name in the subsequent actions.  </p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">langner</span> <span class="kn">import</span> <span class="n">build</span>
+
+<span class="nb">input</span> <span class="o">=</span> <span class="s">'''</span>
+<span class="s">    (x) -&gt; (print(x.value));</span>
+<span class="s">    (a.value &gt; 0) -&gt; (a.value = a.value - 1);</span>
+<span class="s">    (a.value == 0) -&gt; (new b, b.value = 3, delete a);</span>
+<span class="s">'''</span>
+
+<span class="n">strat</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="n">strat</span><span class="o">.</span><span class="n">add_to_gos</span><span class="p">({</span><span class="s">"value"</span><span class="p">:</span><span class="mi">3</span><span class="p">})</span>
+
+<span class="n">strat</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+<p>The output:</p>
+
+<pre><code>3
+2
+1
+0
+3
+2
+1
+0
+...
+</code></pre>
+
+<p>Every evaluation cycle the <code>value</code> field in the object is decreased by one. When the field is equal 0 then the object is removed form GOS and the new object is created and initialized with a <code>field</code> value equal 3. In the example, there is always one object in the GOS.</p>
+
+<h3>
+<a name="undefined-fields" class="anchor" href="#undefined-fields"><span class="octicon octicon-link"></span></a>Undefined fields</h3>
+
+<p>Langner object is bit different then objects in Python. First, it <strong>does not have the methods</strong>. Second, <strong>the field can be either number, string, boolean or other object</strong>. There is <strong>no null value</strong> in Langer. The field either have value or is undefined. If not existing field is access <code>undef</code> is returned. You can assign <code>undef</code> to a field. It means that you undefine this field and it does not exist any longer. The <code>undef</code> has one more interesting property:  </p>
+
+<div class="highlight highlight-python"><pre><span class="kn">from</span> <span class="nn">langner</span> <span class="kn">import</span> <span class="n">build</span>
+
+<span class="nb">input</span> <span class="o">=</span> <span class="s">'''</span>
+<span class="s">    (x) -&gt; (print(x.foo + " " + x.foo.bar));</span>
+<span class="s">'''</span>
+
+<span class="n">strat</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="n">strat</span><span class="o">.</span><span class="n">add_to_gos</span><span class="p">({})</span>
+<span class="n">strat</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+<p>The output:</p>
+
+<pre><code>undef undef
+undef undef
+undef undef
+...
+</code></pre>
+
+<p>If the unidefined field is accessed as an object it returns <code>undef</code> as well.</p>
 
 <h3>
 <a name="functions" class="anchor" href="#functions"><span class="octicon octicon-link"></span></a>Functions</h3>
