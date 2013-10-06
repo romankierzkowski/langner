@@ -76,7 +76,11 @@ World!
 
 One was of getting objects to GOS is by adding them with `add_to_gos()` method. This method takes dictionaries that maps a field name to a field value.
 
-When the variable appears in a condition you may read it as an **universal quantification**. In the given example we would read the rule as: *For each object x in GOS, print x.msg to the console.* Then each object in GOS is substituted under x. The variable condition is always true for each object in a GOS. Let's consider more complicated example:
+When the variable appears in a condition you may read it as an **universal quantification**. In the given example we would read the rule as: 
+
+*For each object x in GOS, print x.msg to the console.* 
+
+Then each object in GOS is substituted under x. The variable condition is always true for each object in a GOS. Let's consider more complicated example:
 
 ```python
 from langner import build
@@ -94,7 +98,9 @@ strat.add_to_gos({"ok":True, "msg":"World!"})
 strat.run()
 ```
 
-The following code will generate exactly the same output as previous example. The "Goodbye" message will not be printed. The rule can be read: *For each object x in GOS that x.ok is true, print x.msg to the console.*
+The following code will generate exactly the same output as previous example. The "Goodbye" message will not be printed. The rule can be read:
+
+*For each object x in GOS that x.ok is true, print x.msg to the console.*
 
 Although, the real world might be bit more complex than the next example let's face the truth about dating: 
 
@@ -131,11 +137,72 @@ Sandy dates Alex
 ...
 ```
 
-The following rule contains two variables. **The actions are executed only if, each condition in the rule is fullfilled.** In the given example the rule might be read: *For each object x and for each object y, that x is a female and y is a male and x and y have the same score, print the copule to the console.*
+The following rule contains two variables. **The actions are executed only if, each condition in the rule is fullfilled.** In the given example the rule might be read:
+
+*For each object x and for each object y, that x is a female and y is a male and x and y have the same score, print the copule to the console.*
 
 ### Creating and Removing Objects from GOS ###
 
+The object can be added to GOS with `new <variable>` action and removed from GOS with `delete <variable>` action. After the object is created, it can be access via variable name in the subsequent actions.  
+
+```python
+from langner import build
+
+input = '''
+    (x) -> (print(x.value));
+    (a.value > 0) -> (a.value = a.value - 1);
+    (a.value == 0) -> (new b, b.value = 3, delete a);
+'''
+
+strat = build(input)
+strat.add_to_gos({"value":3})
+
+strat.run()
+```
+The output:
+```
+3
+2
+1
+0
+3
+2
+1
+0
+...
+```
+
+Every evaluation cycle the `value` field in the object is decreased by one. When the field is equal 0 then the object is removed form GOS and the new object is created and initialized with a `field` value equal 3. In the example, there is always one object in the GOS.
+
+### Undefined fields ###
+
+Langner object is bit different then objects in Python. First, it **does not have the methods**. Second, **the field can be either number, string, boolean or other object**. There is **no null value** in Langer. The field either have value or is undefined. If not existing field is access `undef` is returned. You can assign `undef` to a field. It means that you undefine this field and it does not exist any longer. The `undef` has one more interesting property:  
+
+```python
+from langner import build
+
+input = '''
+    (x) -> (print(x.foo + " " + x.foo.bar));
+'''
+
+strat = build(input)
+strat.add_to_gos({})
+strat.run()
+```
+
+The output:
+```
+undef undef
+undef undef
+undef undef
+...
+```
+
+If the unidefined field is accessed as an object it returns `undef` as well.
+
 ### Functions ###
+
+
 
 ### Events ###
 
