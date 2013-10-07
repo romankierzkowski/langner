@@ -227,7 +227,7 @@ The output:
 
 ### Events ###
 
-The events in Langer is a mechanism of an input. It is a way that external world can communicate with a strategy. Event is a kind of condition. This **condition is fullfiled when an event has been triggered**. The parameters of an event are available for other conditions and actions of the rule. To differenciate event from a function call, event name is preceaded with *# symbol*. To trigger an event, you have to execute method of a strategy, with a parameters you want to pass.
+The events in Langer is a mechanism of an input. It is a way that external world can communicate with a strategy. Event is a kind of condition. This **condition is fullfiled when an event has been triggered**. The parameters of an event are available for other conditions and actions of the rule. To differenciate event from a function call, event name is preceaded with **# symbol**. To trigger an event, you have to execute method of a strategy, with a parameters you want to pass.
 
 *Note:* There should be *only one event per rule*!
 
@@ -321,7 +321,7 @@ Langner use following operators (the precedence is exactly the same as in Python
 
 ### Execution Order ###
 
-The strategy is evaluated in the cycles. Each cycle the rules are evaluated against object from current state of the GOS. The rules are evaluated in the order of definition. The same refares to the conditions in the rule. Each cycle brings GOS from one state to another. **The actions from one cycle cannot affect conditions from the same cycle.** If all of the rule condition are fulfilled the rule actions are sheaduled to execution. **The actions are executed after all rules has been evaluated.**
+The strategy is **evaluated in the cycles**. Each cycle the rules are evaluated against object from current state of the GOS. The rules are evaluated in the order of definition. The same refares to the conditions in the rule. Each cycle brings GOS from one state to another. **The actions from one cycle cannot affect conditions from the same cycle.** If all of the rule condition are fulfilled the rule actions are sheaduled to execution. **The actions are executed after all rules has been evaluated.**
 
 ```python
 from langner import build
