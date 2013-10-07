@@ -227,7 +227,52 @@ The output:
 
 ### Events ###
 
-### Conditions and Actions ###
+### Operators ###
+
+In conditions you may use following operators:
+
+<table>
+  <tr>
+    <td>||</td><td>Or</td>
+  </tr>
+  <tr>
+    <td>&&</td><td>And</td>
+  </tr>
+  <tr>
+    <td>!</td><td>Logical Negation</td>
+  </tr>
+  <tr>
+    <td>==, &lt;=, &gt;=, &lt;, &gt;</td><td>Comparison</td>
+  </tr>
+  <tr>
+    <td>|</td><td>Bitwise Or</td>
+  </tr>
+  <tr>
+    <td>^</td><td>Bitwise Xor</td>
+  </tr>
+  <tr>
+    <td>&</td><td>Bitwise And</td>
+  </tr>
+  <tr>
+    <td>&lt;&lt;</td><td>Shift Left</td>
+  </tr>
+  <tr>
+    <td>&gt;&gt;</td><td>Shift Right</td>
+  </tr>
+  <tr>
+    <td>+, -</td><td>Addition and Subtraction</td>
+  </tr>
+  <tr>
+    <td>*, /, %, //</td><td>Multiplication, Division, Modulo, Floor Division</td>
+  </tr>
+  <tr>
+    <td>-, ~</td><td>Arithmetic Negation, Bitwise Inversion</td>
+  </tr>
+  <tr>
+    <td>**</td><td>Power</td>
+  </tr>
+  
+</table>
 
 ### Execution Order ###
 
