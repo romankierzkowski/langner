@@ -227,9 +227,54 @@ The output:
 
 ### Events ###
 
+The events in Langer is a mechanism of an input. It is a way that external world can communicate with a strategy. Event is a kind of condition. This **condition is fullfiled when an event has been triggered**. The parameters of an event are available for other conditions and actions of the rule. To differenciate event from a function call, event name is preceaded with *# symbol*. To trigger an event, you have to execute method of a strategy, with a parameters you want to pass.
+
+*Note:* There should be *only one event per rule*!
+
+Let's consider [real life example](http://youtu.be/EtoMN_xi-AM):
+
+```python
+from langner import build
+from time import sleep
+
+input = '''
+    (True) -> (print("na na"));
+    (#show_message(msg)) -> (print(msg));
+'''
+
+strat = build(input)
+
+strat.daemon = True
+strat.start() # It starts strategy as a separate thread.
+
+while(True):
+    strat.show_message("Batman!")
+    sleep(0.01)
+```
+
+The output:
+```
+na na
+na na
+na na
+na na
+na na
+na na
+na na
+na na
+na na
+Batman!
+na na
+na na
+na na
+...
+```
+
+In this example the strategy is started as a deamon. Once every 0.01 second event `show_message` is triggered. It passes "Batman" to the context of a rule.
+
 ### Operators ###
 
-In conditions you may use following operators:
+Langner use following operators (the precedence is exactly the same as in Python):
 
 <table>
   <tr>
@@ -275,6 +320,8 @@ In conditions you may use following operators:
 </table>
 
 ### Execution Order ###
+
+
 
 Why a new language?
 -----------------------
