@@ -270,7 +270,7 @@ na na
 ...
 ```
 
-In this example the strategy is started as a deamon. Once every 0.01 second event `show_message` is triggered. It passes "Batman" to the context of a rule.
+In this example the strategy is started as a deamon. Once every 0.01 second event `#show_message()` is triggered. It passes "Batman!" message to the context of a rule.
 
 ### Operators ###
 
@@ -321,7 +321,42 @@ Langner use following operators (the precedence is exactly the same as in Python
 
 ### Execution Order ###
 
+The strategy is evaluated in the cycles. Each cycle the rules are evaluated against object from current state of the GOS. The rules are evaluated in the order of definition. The same refares to the conditions in the rule. Each cycle brings GOS from one state to another. **The actions from one cycle cannot affect conditions from the same cycle.** If all of the rule condition are fulfilled the rule actions are sheaduled to execution. **The actions are executed after all rules has been evaluated.**
 
+```python
+from langner import build
+
+input = '''
+    (o("A"), o("B")) -> (o("C"), o("D"));
+    (o("F"), o("G")) -> (o("G"), o("H"));
+    (True)->(print("-----------------"));
+'''
+
+def o(v):
+    print v
+    return True
+
+strat = build(input, functions=[o])
+strat.run()
+```
+
+The output:
+```
+A
+B
+F
+G
+C
+D
+G
+H
+-----------------
+A
+B
+...
+```
+
+To separate output from the different cycles we have added the rule: `(True)->(print("-----------------"));`. The function `o()` prints message to the output and return `True`. That is why it can be used as an codition and an action. The conditions are executed first: A B F G then there are executed actions: C D G H.
 
 Why a new language?
 -----------------------
