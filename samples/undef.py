@@ -1,9 +1,10 @@
 from langner import build
 
 input = '''
-    (True || False, True) -> (print("Hello"), print("World"));
+    (x) -> (print(x.foo + " " + x.foo.bar));
 '''
 
 strat = build(input)
-
+strat.add_to_gos({})
 strat.run()
+

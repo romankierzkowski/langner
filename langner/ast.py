@@ -109,6 +109,9 @@ class Undef(Object):
     def dfs(self, callback):
         callback(self)
 
+    def __str__(self):
+        return "undef"
+
 # Singleton for undefined:
 Object.UNDEF = Undef()
 
@@ -166,11 +169,14 @@ class Selection:
         return result 
 
     def evaluate(self, **context):
-        result = self.variable.execute(**context)
         if self.selection_path:
+            o = self.variable.execute(**context)
             for name in self.selection_path:
-                result = result[name]
-        return result
+                o = o[name]
+                if o is Object.UNDEF:
+                    return False
+            return (o is not False) and (o is not 0)
+        return True
 
     def link(self, functions):
         pass
@@ -356,7 +362,7 @@ class Rule:
         output = []
         for action in self.actions:
             result = action.execute(**context)
-            if result:
+            if (isinstance(action, New)):
                 name, obj = result
                 context[name] = obj
                 output.append(obj)
@@ -419,10 +425,14 @@ class BinnaryOperator(Operator):
         return "%s %s %s" % (self._parenth(self.loperand), self.operator, self._parenth(self.roperand))
 
     def execute(self, **context):
-        return self.operation(self.loperand.execute(**context), self.roperand.execute(**context))
+        l = self.loperand.execute(**context)
+        r = self.roperand.execute(**context)
+        return self.operation(l, r)
 
     def evaluate(self, **context):
-        return self.operation(self.loperand.evaluate(**context), self.roperand.evaluate(**context))
+        l = self.loperand.execute(**context)
+        r = self.roperand.execute(**context)
+        return self.operation(l, r)
 
     @property
     def variables(self):
@@ -555,10 +565,23 @@ class RightShift(Shift):
     operator = ">>"
     operation = rshift
 
+@staticmethod
+def add_or_concat(self, a,b):
+    try:
+        return add(a,b)
+    except TypeError:
+        return concat(str(a), str(b))
+
 class Add(BinnaryOperator):
     operator = "+"
     priority = 9
-    operation = add
+
+    @staticmethod
+    def operation(a,b):
+        try:
+            return add(a,b)
+        except TypeError:
+            return concat(str(a), str(b))
 
 class Substract(BinnaryOperator):
     operator = "-"
@@ -636,11 +659,11 @@ class FunctionExecution(Condition, Action):
 
     def __init__(self, name, params):
         self.name = name
-        self.params = params
+        self.params = params or []
 
     def __str__(self):
         param_list = ""
-        if self.params != None: 
+        if self.params:
             for r in self.params[:-1]:
                 param_list += "%s, " % str(r)
             param_list += str(self.params[-1])
@@ -651,6 +674,13 @@ class FunctionExecution(Condition, Action):
         for p in self.params:
             param_list.append(p.execute(**context))
         return self.impl(*param_list)
+
+    def evaluate(self, **context):
+        param_list = []
+        for p in self.params:
+            param_list.append(p.execute(**context))
+        result = self.impl(*param_list)
+        return (result is not None) and (result is not 0) and (result is not False)
 
     @property
     def variables(self):

@@ -23,6 +23,8 @@ def triggers_creator_factory(strategy):
 
 
 def build(code, functions = {}):
+    if not isinstance(functions, dict):
+        functions = dict([(f.__name__, f) for f in functions])
     strategy = parser.parse(code)
     standard = { "print": _print }
     strategy.dfs(linker(dict(standard.items() + functions.items())))
