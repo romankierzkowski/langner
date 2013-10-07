@@ -5,3 +5,11 @@ Version 0.1
   Contributors: Roman Kierzkowski
 
   Innitial version with basic implemetation of reasoning and event handling.
+
+Version 0.2
+
+  Contributors: Roman Kierzkowski
+
+  String concatenation fixed.
+  Fixes in condition evaluation - 0 and None evaluated as false.
+

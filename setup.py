@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='langner',
-      version='0.1',
+      version='0.2',
       description='Langner - language for expressing behaviour strategies.',
       long_description='Object oriented language that combines event driven architecture and programing in logic.',
       classifiers=[
