@@ -229,7 +229,7 @@ The output:
 
 The events in Langer is a mechanism of an input. It is a way that external world can communicate with a strategy. Event is a kind of condition. This **condition is fulfilled when an event has been triggered**. The parameters of an event are available for other conditions and actions of the rule. To differentiate event from a function call, event name is preceded with **# symbol**. To trigger an event, you have to execute method of a strategy, with a parameters you want to pass.
 
-*Note:* There should be *only one event per rule*!
+*Note:* There should be *only one event per rule**!
 
 Let's consider [real life example](http://youtu.be/EtoMN_xi-AM):
 
@@ -356,7 +356,13 @@ B
 ...
 ```
 
-To separate output from the different cycles we have added the rule: `(True)->(print("-----------------"));`. The function `o()` prints message to the output and return `True`. That is why it can be used as condition and an action. The conditions are executed first: A B F G then there are executed actions: C D G H.
+To separate output from the different cycles we have added the rule:
+
+```
+(True)->(print("-----------------"));
+```
+
+The function `o()` prints message to the output and return `True`. That is why it can be used as condition and an action. The conditions are executed first: A B F G then there are executed actions: C D G H.
 
 Why a new language?
 -----------------------
