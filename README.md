@@ -1,6 +1,6 @@
 Langner
 =======
-**Disclaimer:** Langner is in **very alpha**. The criticism, ideas and forbearance are **highly appreciated**. If you have any question or remark feel free to share it on the [Langner forum](https://groups.google.com/forum/#!forum/langner).
+If you have any question or remark feel free to share it on the [Langner forum](https://groups.google.com/forum/#!forum/langner).
 
 What is Langer?
 -----------------------
